@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Running Pace Calculator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container py-5">
+        <h1 class="text-center mb-4">Running Pace Calculator</h1>
+        
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <form id="paceForm" class="mb-4">
+                            <div class="mb-3">
+                                <label for="pace" class="form-label">Enter Pace</label>
+                                <input type="text" class="form-control" id="pace" placeholder="Enter pace (e.g., 8:30 or 8.5)">
+                                <div class="form-text">Accept both MM:SS (8:30) or decimal (8.5) formats</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Pace Unit</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="unit" id="mileUnit" value="mile" checked>
+                                    <label class="form-check-label" for="mileUnit">
+                                        Minutes per Mile
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="unit" id="kmUnit" value="km">
+                                    <label class="form-check-label" for="kmUnit">
+                                        Minutes per Kilometer
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">Calculate</button>
+                        </form>
+                        
+                        <div id="results" style="display: none;">
+                            <h5 class="mb-3">Results</h5>
+                            <div class="mb-3">
+                                <strong>Converted Pace: </strong>
+                                <span id="convertedPace"></span>
+                            </div>
+                            
+                            <h5 class="mb-3">Predicted Race Times</h5>
+                            <ul class="list-group">
+                                <li class="list-group-item">5K: <span id="5k-time"></span></li>
+                                <li class="list-group-item">10K: <span id="10k-time"></span></li>
+                                <li class="list-group-item">Half Marathon: <span id="half-time"></span></li>
+                                <li class="list-group-item">Marathon: <span id="marathon-time"></span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('paceForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const pace = document.getElementById('pace').value;
+            const unit = document.querySelector('input[name="unit"]:checked').value;
+            
+            try {
+                const response = await fetch('/convert', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ pace, unit }),
+                });
+                
+                const data = await response.json();
+                
+                // Display results
+                document.getElementById('results').style.display = 'block';
+                document.getElementById('convertedPace').textContent = 
+                    `${data.converted_pace} min/${unit === 'mile' ? 'km' : 'mile'}`;
+                
+                // Update race times
+                document.getElementById('5k-time').textContent = data.race_times['5K'];
+                document.getElementById('10k-time').textContent = data.race_times['10K'];
+                document.getElementById('half-time').textContent = data.race_times['Half Marathon'];
+                document.getElementById('marathon-time').textContent = data.race_times['Marathon'];
+                
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+    </script>
+</body>
+</html>
